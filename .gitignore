@@ -39,3 +39,4 @@
 *.out
 *.app
 src/mpags-cipher
+.vscode
