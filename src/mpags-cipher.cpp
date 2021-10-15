@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
 #include "TransformChar.hpp" 
 #include "processCommandLine.hpp" 
 
@@ -57,25 +58,50 @@ int main(int argc, char* argv[])
     // Read in user input from stdin/file
     // Warn that input file option not yet implemented
     if (!inputFile.empty()) {
-        std::cerr << "[warning] input from file ('" << inputFile
-                  << "') not implemented yet, using stdin\n";
+        std::ifstream in_file{inputFile};
+        bool ok_to_write{in_file.good()};
+        if (!ok_to_write){
+        std::cerr << "Incompatable input file ('" << inputFile
+                  << "')\n";
+        return 1;
+        }
+        else{
+        // loop over each character from user input
+        while (in_file >> inputChar) {
+            inputText += transformChar(inputChar);
     }
-
+            in_file.close();
+        }
+    }
+    else{
     // loop over each character from user input
     while (std::cin >> inputChar) {
         inputText += transformChar(inputChar);
+    }
     }
 
     // Print out the transliterated text
 
     // Warn that output file option not yet implemented
     if (!outputFile.empty()) {
-        std::cerr << "[warning] output to file ('" << outputFile
-                  << "') not implemented yet, using stdout\n";
+        std::ofstream out_file{outputFile};
+        
+        bool ok_to_write{out_file.good()};
+        if (!ok_to_write){
+        std::cerr << "Incompatable output file ('" << outputFile
+                  << "')\n";
+        return 1;
+        }
+        else{
+            out_file << inputText;
+            out_file.close();
+        }
+    }
+    else{
+        std::cout << inputText << std::endl;
     }
 
-    std::cout << inputText << std::endl;
-
+    
     // No requirement to return from main, but we do so for clarity
     // and for consistency with other functions
     return 0;
