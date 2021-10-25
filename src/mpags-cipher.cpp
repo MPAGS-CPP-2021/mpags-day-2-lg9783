@@ -1,10 +1,11 @@
+#include "TransformChar.hpp"
+#include "processCommandLine.hpp"
+#include "runCaesarCipher.hpp"
 #include <cctype>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <fstream>
-#include "TransformChar.hpp" 
-#include "processCommandLine.hpp" 
 
 int main(int argc, char* argv[])
 {
@@ -16,11 +17,13 @@ int main(int argc, char* argv[])
     bool versionRequested{false};
     std::string inputFile{""};
     std::string outputFile{""};
+    bool encrypt{true};
+    unsigned int key{0};
+    std::string cipher{""};
 
-    bool outcome{processCommandLine(cmdLineArgs, helpRequested,
-                                    versionRequested, inputFile, outputFile)};
     // If there has been a failure with processinging command line arguments
-    if (!outcome) {
+    if (!processCommandLine(cmdLineArgs, helpRequested, versionRequested,
+                            inputFile, outputFile, cipher, encrypt, key)) {
         return 1;
     }
 
@@ -37,6 +40,9 @@ int main(int argc, char* argv[])
             << "                   Stdin will be used if not supplied\n\n"
             << "  -o FILE          Write processed text to FILE\n"
             << "                   Stdout will be used if not supplied\n\n"
+            << "  --cipher NAME    Specify cipher type, default = 'Caeser'\n\n"
+            << "  --key K          Key = K (0-25), default = 0 \n\n"
+            << "  --type           'encrypt' or 'decrypt', default = 'encrypt'\n\n"
             << std::endl;
         // Help requires no further action, so return from main
         // with 0 used to indicate success
@@ -59,49 +65,41 @@ int main(int argc, char* argv[])
     // Warn that input file option not yet implemented
     if (!inputFile.empty()) {
         std::ifstream in_file{inputFile};
-        bool ok_to_write{in_file.good()};
-        if (!ok_to_write){
-        std::cerr << "Incompatable input file ('" << inputFile
-                  << "')\n";
-        return 1;
-        }
-        else{
-        // loop over each character from user input
-        while (in_file >> inputChar) {
-            inputText += transformChar(inputChar);
-    }
+        if (!in_file.good()) {
+            std::cerr << "Incompatable input file ('" << inputFile << "')\n";
+            return 1;
+        } else {
+            // loop over each character from user input
+            while (in_file >> inputChar) {
+                inputText += transformChar(inputChar);
+            }
             in_file.close();
         }
-    }
-    else{
-    // loop over each character from user input
-    while (std::cin >> inputChar) {
-        inputText += transformChar(inputChar);
-    }
+    } else {
+        // loop over each character from user input
+        while (std::cin >> inputChar) {
+            inputText += transformChar(inputChar);
+        }
     }
 
-    // Print out the transliterated text
+    // add cipher cases
+    inputText = runCaesarCipher(inputText, key, encrypt);
 
     // Warn that output file option not yet implemented
     if (!outputFile.empty()) {
         std::ofstream out_file{outputFile};
-        
-        bool ok_to_write{out_file.good()};
-        if (!ok_to_write){
-        std::cerr << "Incompatable output file ('" << outputFile
-                  << "')\n";
-        return 1;
-        }
-        else{
+
+        if (!out_file.good()) {
+            std::cerr << "Incompatable output file ('" << outputFile << "')\n";
+            return 1;
+        } else {
             out_file << inputText;
             out_file.close();
         }
-    }
-    else{
+    } else {
         std::cout << inputText << std::endl;
     }
 
-    
     // No requirement to return from main, but we do so for clarity
     // and for consistency with other functions
     return 0;

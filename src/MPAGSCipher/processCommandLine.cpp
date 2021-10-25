@@ -1,9 +1,10 @@
-#include "processCommandLine.hpp" 
+#include "processCommandLine.hpp"
 #include <iostream>
 
 bool processCommandLine(const std::vector<std::string>& cmdLineArgs,
                         bool& helpRequested, bool& versionRequested,
-                        std::string& inputFileName, std::string& outputFileName)
+                        std::string& inputFileName, std::string& outputFileName,
+                        std::string& cipher, bool& encrypt, unsigned int& key)
 
 {
     /* Parse command line arguments
@@ -52,6 +53,49 @@ bool processCommandLine(const std::vector<std::string>& cmdLineArgs,
                 // Got filename, so assign value and advance past it
                 outputFileName = cmdLineArgs[i + 1];
                 ++i;
+            }
+        } else if (cmdLineArgs[i] == "--cipher") {
+            // Handle cipher type option
+            // Next element is type unless "--cipher" is the last argument, then 'caeser' is default
+            if (i == nCmdLineArgs - 1) {
+                ++i;
+            } else {
+                // Got cipher name, so assign value and advance past it
+                cipher = cmdLineArgs[i + 1];
+                ++i;
+            }
+        } else if (cmdLineArgs[i] == "--key") {
+            // Handle key type option
+            // Next element is value unless "--key" is the last argument, then 0 is default
+            if (i == nCmdLineArgs - 1) {
+                ++i;
+            } else {
+                // Got key value, so assign value and advance past it
+                key = std::stoul(cmdLineArgs[i + 1]);
+                if (key > 25) {
+                    std::cout << "Key must be in range 0-25\n";
+                    return false;
+                }
+                ++i;
+            }
+        } else if (cmdLineArgs[i] == "--type") {
+            // Handle encryption/decryption type option
+            // Next element is value unless "--type" is the last argument, then encrypt is default
+            if (i == nCmdLineArgs - 1) {
+                ++i;
+            } else {
+                // Got key value, so assign value and advance past it
+                if (cmdLineArgs[i + 1] == "encrypt") {
+                    // It is encrypt by default
+                    ++i;
+                } else if (cmdLineArgs[i + 1] == "decrypt") {
+                    encrypt = false;
+                    ++i;
+                } else {
+                    std::cout << "incompatable encrypt/decrypt type provided"
+                              << std::endl;
+                    return false;
+                }
             }
         } else {
             // Have an unknown flag to output error message and return non-zero
